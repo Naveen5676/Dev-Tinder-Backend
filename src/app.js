@@ -4,27 +4,19 @@ const express = require("express");
 
 const app = express();
 
-app.get("/user", (req, res) => {
-  res.send({ name: "naveen", age: 65 });
-});
+app.use(
+  "/user",
+  (req, res, next) => {
+    console.log(" first request handler 1");
+    next();
+  },
+  (req, res) => {
+    console.log("seecond request handler 2");
+    res.send("second request handler");
+  }
+);
 
-app.post("/user", (req, res) => {
-  res.send("saved in the database");
-});
-
-app.get("/product", (req, res) => {
-  console.log("/product", req.query);
-  res.send(req.query);
-});
-
-app.get("/device/:userId", (req, res) => {
-  console.log("/device", req.params);
-  res.send(req.params);
-});
-
-app.use("/test", (req, res) => {
-  res.send("wlecome to test page ");
-});
+app.use('/product', rh1, [rh2, rh3] , rh4 , rh5)
 
 app.listen(3000, () => {
   console.log("server is started");

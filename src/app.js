@@ -4,19 +4,21 @@ const express = require("express");
 
 const app = express();
 
-app.use(
-  "/user",
-  (req, res, next) => {
-    console.log(" first request handler 1");
-    next();
-  },
-  (req, res) => {
-    console.log("seecond request handler 2");
-    res.send("second request handler");
-  }
-);
+const { adminAuth, userAuth } = require("./middlewares/auth");
 
-app.use('/product', rh1, [rh2, rh3] , rh4 , rh5)
+app.use("/admin", adminAuth);
+
+app.get("/admin/userList", (req, res) => {
+  res.send("all user data sent");
+});
+
+app.get("/user/list", userAuth, (req, res) => {
+  res.send("user list sent");
+});
+
+app.get("/login", (req, res) => {
+  res.send("login in user");
+});
 
 app.listen(3000, () => {
   console.log("server is started");

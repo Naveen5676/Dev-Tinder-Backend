@@ -14,7 +14,6 @@ const User = require("./models/user");
 // Without this, req.body would be undefined.
 app.use(express.json());
 
-
 app.post("/signup", async (req, res) => {
   // create a new instace of the user modal
   const user = new User(req.body);
@@ -24,6 +23,65 @@ app.post("/signup", async (req, res) => {
     res.send("user signup successfully");
   } catch (err) {
     res.status(400).send("some thing went wrong ");
+  }
+});
+
+// using mongoose find
+app.get("/user", async (req, res) => {
+  try {
+    const email = req.body.email;
+    console.log(email);
+    const users = await User.find({ emailId: req.body.email });
+    if (users.length > 0) {
+      res.send(users);
+    } else {
+      res.status(402).send(" user cannot be found");
+    }
+  } catch (err) {
+    res.status(400).send("some thing went wrong");
+  }
+});
+
+// using mongoose findOne
+app.get("/user-one", async (req, res) => {
+  try {
+    const user = await User.findOne({ emailId: req.body.email });
+    console.log(user);
+    if (user) {
+      res.send(user);
+    } else {
+      res.status(404).send(" user cannot be found");
+    }
+  } catch (err) {
+    res.status(400).send("some thing went wrong");
+  }
+});
+
+// send all the user list
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find();
+    if (users.length > 0) {
+      res.send(users);
+    } else {
+      res.status(404).send(" user cannot be found");
+    }
+  } catch (err) {
+    res.status(400).send("some thing went wrong");
+  }
+});
+
+// using mongoose findById
+app.get("/user-id", async (req, res) => {
+  try {
+    const user = await User.findById(req.body.id);
+    if (user) {
+      res.send(user);
+    } else {
+      res.status(404).send(" cannot find the user");
+    }
+  } catch (err) {
+    res.status(400).send("some thing went wrong");
   }
 });
 

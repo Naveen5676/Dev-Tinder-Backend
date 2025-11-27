@@ -6,25 +6,26 @@ const app = express();
 
 const mongodb = require("./config/database");
 
-const User = require("./models/user")
+const User = require("./models/user");
 
-app.post('/signup', async(req, res)=>{
-  // create a new instace of the user modal 
-  const user = new User({
-    firstName: "naveen",
-    lastName: "wali",
-    emailId: "naveen@gmail.com",
-    password: "naveen@123"
-  })
+// express.json() is a built-in middleware that parses incoming JSON data.
+// When a client sends JSON (like in POST /signup), this middleware converts
+// the raw JSON into a JavaScript object and attaches it to req.body.
+// Without this, req.body would be undefined.
+app.use(express.json());
 
-  try{
-         
-    await user.save()
-    res.send("user signup successfully")
-  }catch(err){
-    res.status(400).send("some thing went wrong ")
+
+app.post("/signup", async (req, res) => {
+  // create a new instace of the user modal
+  const user = new User(req.body);
+
+  try {
+    await user.save();
+    res.send("user signup successfully");
+  } catch (err) {
+    res.status(400).send("some thing went wrong ");
   }
-})
+});
 
 mongodb()
   .then(() => {

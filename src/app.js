@@ -85,6 +85,27 @@ app.get("/user-id", async (req, res) => {
   }
 });
 
+app.delete("/user", async (req, res) => {
+  try {
+    const id = req.body.id;
+    await User.findByIdAndDelete({ _id: id });
+    res.send("user deleted successfully");
+  } catch (err) {
+    res.status(400).send("some thing went wrong");
+  }
+});
+
+app.patch("/user-update", async (req, res) => {
+  try {
+    const body = req.body;
+    const emailId = req.body.emailId;
+    await User.findOneAndUpdate({ emailId: emailId }, body);
+    res.send("updated successfully");
+  } catch (err) {
+    res.status(400).send(" some thing went wrong");
+  }
+});
+
 mongodb()
   .then(() => {
     console.log("database connected successfully ");

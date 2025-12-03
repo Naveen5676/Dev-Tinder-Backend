@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator")
 
 const userSchema = mongoose.Schema(
   {
@@ -17,10 +18,20 @@ const userSchema = mongoose.Schema(
       trim: true,
       unique: true,
       lowercase: true,
+      validator(value){
+        if(!validator.isEmail(value)){
+          throw new Error("Invalid email address" + value)
+        }
+      }
     },
     password: {
       type: String,
       required: true,
+      validator(value){
+        if(!validator.isStrongPassword(value)){
+          throw new Error("Provide a string password")
+        }
+      }
     },
     age: {
       type: Number,
@@ -30,7 +41,7 @@ const userSchema = mongoose.Schema(
       type: String,
       validate(value) {
         if (![male, female].includes(value)) {
-          throw new error("geneder data is not valid");
+          throw new Error("geneder data is not valid");
         }
       },
     },
@@ -38,6 +49,11 @@ const userSchema = mongoose.Schema(
       type: String,
       defaut:
         "https://cdn.vectorstock.com/i/1000v/66/13/default-avatar-profile-icon-social-media-user-vector-49816613.jpg",
+      validator(value){
+        if(!validator.isURL(value)){
+          throw new Error("Invalid URL ")
+        }
+      }
     },
     about: {
       type: String,

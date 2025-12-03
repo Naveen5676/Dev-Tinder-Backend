@@ -95,10 +95,16 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user-update", async (req, res) => {
+app.patch("/user-update/:userId", async (req, res) => {
   try {
+  
+    const accpetedBody = [
+      
+    ]   
+ 
+
     const body = req.body;
-    const emailId = req.body.emailId;
+    const emailId = req.params?.userId;
     await User.findOneAndUpdate({ emailId: emailId }, body);
     res.send("updated successfully");
   } catch (err) {

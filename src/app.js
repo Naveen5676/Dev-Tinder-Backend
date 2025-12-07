@@ -8,6 +8,8 @@ const mongodb = require("./config/database");
 
 const User = require("./models/user");
 
+const bcrypt = require("bcrypt");
+
 // express.json() is a built-in middleware that parses incoming JSON data.
 // When a client sends JSON (like in POST /signup), this middleware converts
 // the raw JSON into a JavaScript object and attaches it to req.body.
@@ -16,13 +18,27 @@ app.use(express.json());
 
 app.post("/signup", async (req, res) => {
   // create a new instace of the user modal
-  const user = new User(req.body);
+  const { firstName, lastName, emailId, password } = req.body;
 
   try {
-    await user.save();
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: hashPassword
+    })
+     
+    await user.save({
+      firstName,
+      lastName,
+      emailId,
+      password: hashPassword,
+    });
     res.send("user signup successfully");
   } catch (err) {
-    res.status(400).send("some thing went wrong ");
+    res.status(400).send("some thing went wrong " + err);
   }
 });
 
@@ -97,11 +113,7 @@ app.delete("/user", async (req, res) => {
 
 app.patch("/user-update/:userId", async (req, res) => {
   try {
-  
-    const accpetedBody = [
-      
-    ]   
- 
+    const accpetedBody = [];
 
     const body = req.body;
     const emailId = req.params?.userId;

@@ -10,11 +10,16 @@ const User = require("./models/user");
 
 const bcrypt = require("bcrypt");
 
+const cookieParser = require("cookie-parser");
+
+const jwt = require("jsonwebtoken");
+
 // express.json() is a built-in middleware that parses incoming JSON data.
 // When a client sends JSON (like in POST /signup), this middleware converts
 // the raw JSON into a JavaScript object and attaches it to req.body.
 // Without this, req.body would be undefined.
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   // create a new instace of the user modal
@@ -27,9 +32,9 @@ app.post("/signup", async (req, res) => {
       firstName,
       lastName,
       emailId,
-      password: hashPassword
-    })
-     
+      password: hashPassword,
+    });
+
     await user.save({
       firstName,
       lastName,
@@ -42,19 +47,53 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// using mongoose find
-app.get("/user", async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
-    const email = req.body.email;
-    console.log(email);
-    const users = await User.find({ emailId: req.body.email });
-    if (users.length > 0) {
-      res.send(users);
+    const { emailId, password } = req.body;
+
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      res.status(401).send(" Invalid credentails");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      const token = await jwt.sign({ _id: user._id }, "DevTineder@1234");
+      res.cookie("token", token);
+      res.status(200).send("login successfully");
     } else {
-      res.status(402).send(" user cannot be found");
+      res.status(401).send(" Invalid credentials ");
     }
   } catch (err) {
-    res.status(400).send("some thing went wrong");
+    res.send(400).send("some thing went wrong " + error);
+  }
+});
+
+// using mongoose findById
+app.get("/user", async (req, res) => {
+  try {
+    // Correct way to get cookies
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).send("Token not found");
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, "DevTineder@1234");
+
+    // Get user from DB
+    const user = await User.findById(decoded._id);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Send user data
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("Something went wrong: " + err);
   }
 });
 

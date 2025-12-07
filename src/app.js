@@ -14,6 +14,8 @@ const cookieParser = require("cookie-parser");
 
 const jwt = require("jsonwebtoken");
 
+const { userAuth } = require("./middlewares/auth");
+
 // express.json() is a built-in middleware that parses incoming JSON data.
 // When a client sends JSON (like in POST /signup), this middleware converts
 // the raw JSON into a JavaScript object and attaches it to req.body.
@@ -59,7 +61,9 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (isPasswordValid) {
-      const token = await jwt.sign({ _id: user._id }, "DevTineder@1234");
+      const token = await jwt.sign({ _id: user._id }, "DevTineder@1234", {
+        expiresIn: "7d",
+      });
       res.cookie("token", token);
       res.status(200).send("login successfully");
     } else {
@@ -71,22 +75,14 @@ app.post("/login", async (req, res) => {
 });
 
 // using mongoose findById
-app.get("/user", async (req, res) => {
+app.get("/user", userAuth, async (req, res) => {
   try {
-    // Correct way to get cookies
-    const token = req.cookies?.token;
-
-    if (!token) {
-      return res.status(401).send("Token not found");
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, "DevTineder@1234");
+    const user = req.user;
 
     // Get user from DB
-    const user = await User.findById(decoded._id);
+    const userInfo = await User.findById(user._id);
 
-    if (!user) {
+    if (!userInfo) {
       return res.status(404).send("User not found");
     }
 
@@ -94,72 +90,6 @@ app.get("/user", async (req, res) => {
     res.send(user);
   } catch (err) {
     res.status(400).send("Something went wrong: " + err);
-  }
-});
-
-// using mongoose findOne
-app.get("/user-one", async (req, res) => {
-  try {
-    const user = await User.findOne({ emailId: req.body.email });
-    console.log(user);
-    if (user) {
-      res.send(user);
-    } else {
-      res.status(404).send(" user cannot be found");
-    }
-  } catch (err) {
-    res.status(400).send("some thing went wrong");
-  }
-});
-
-// send all the user list
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find();
-    if (users.length > 0) {
-      res.send(users);
-    } else {
-      res.status(404).send(" user cannot be found");
-    }
-  } catch (err) {
-    res.status(400).send("some thing went wrong");
-  }
-});
-
-// using mongoose findById
-app.get("/user-id", async (req, res) => {
-  try {
-    const user = await User.findById(req.body.id);
-    if (user) {
-      res.send(user);
-    } else {
-      res.status(404).send(" cannot find the user");
-    }
-  } catch (err) {
-    res.status(400).send("some thing went wrong");
-  }
-});
-
-app.delete("/user", async (req, res) => {
-  try {
-    const id = req.body.id;
-    await User.findByIdAndDelete({ _id: id });
-    res.send("user deleted successfully");
-  } catch (err) {
-    res.status(400).send("some thing went wrong");
-  }
-});
-
-app.patch("/user-update/:userId", async (req, res) => {
-  try {
-    const accpetedBody = [];
-
-    const body = req.body;
-    const emailId = req.params?.userId;
-    await User.findOneAndUpdate({ emailId: emailId }, body);
-    res.send("updated successfully");
-  } catch (err) {
-    res.status(400).send(" some thing went wrong");
   }
 });
 

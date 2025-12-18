@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
-const validator = require("validator")
+const validator = require("validator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const userSchema = mongoose.Schema(
   {
@@ -18,20 +20,20 @@ const userSchema = mongoose.Schema(
       trim: true,
       unique: true,
       lowercase: true,
-      validator(value){
-        if(!validator.isEmail(value)){
-          throw new Error("Invalid email address" + value)
+      validator(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid email address" + value);
         }
-      }
+      },
     },
     password: {
       type: String,
       required: true,
-      validator(value){
-        if(!validator.isStrongPassword(value)){
-          throw new Error("Provide a string password")
+      validator(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error("Provide a string password");
         }
-      }
+      },
     },
     age: {
       type: Number,
@@ -49,11 +51,11 @@ const userSchema = mongoose.Schema(
       type: String,
       defaut:
         "https://cdn.vectorstock.com/i/1000v/66/13/default-avatar-profile-icon-social-media-user-vector-49816613.jpg",
-      validator(value){
-        if(!validator.isURL(value)){
-          throw new Error("Invalid URL ")
+      validator(value) {
+        if (!validator.isURL(value)) {
+          throw new Error("Invalid URL ");
         }
-      }
+      },
     },
     about: {
       type: String,
@@ -67,5 +69,17 @@ const userSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+// generate JWT
+userSchema.methods.getJWT = function () {
+  return jwt.sign({ _id: this._id }, "DevTineder@1234", {
+    expiresIn: "7d",
+  });
+};
+
+// validate password
+userSchema.methods.validatePassword = async function (plainPassword) {
+  return await bcrypt.compare(plainPassword, this.password);
+};
 
 module.exports = mongoose.model("User", userSchema);

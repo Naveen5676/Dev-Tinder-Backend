@@ -26,14 +26,14 @@ requestRouter.post(
         return res.status(400).json({ message: "cannot request yourself" });
       }
 
-      const existingConnectionRequest = ConnectionRequest.findOne({
+      const existingConnectionRequest = await ConnectionRequest.findOne({
         $or: [
           { fromUserId, toUserId },
           { fromUserId: toUserId, toUserId: fromUserId },
         ],
       });
 
-      if (!existingConnectionRequest) {
+      if (existingConnectionRequest) {
         return res
           .status(400)
           .json({ message: "Connection Request Already Exists !!" });
@@ -57,6 +57,54 @@ requestRouter.post(
       });
     } catch (err) {
       res.status(400).send("Error " + err);
+    }
+  }
+);
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { status, requestId } = req.params;
+
+      const allowedStatus = ["accepted", "rejected"];
+
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).json({
+          message: "Invalid status type " + status,
+        });
+      }
+
+      console.log({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+
+      const validConnectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+
+      if (!validConnectionRequest) {
+        return res.status(400).json({
+          message: "Invalid connection request",
+        });
+      }
+
+      validConnectionRequest.status = status;
+
+      const data = await validConnectionRequest.save();
+
+      res.status(200).json({
+        message: "connection request " + status + " successfully",
+        data,
+      });
+    } catch (error) {
+      res.status(400).send("Error " + error);
     }
   }
 );

@@ -35,12 +35,16 @@ authRouter.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
+    
+
     const user = await User.findOne({ emailId });
+    console.log(user);
     if (!user) {
       return res.status(401).send(" Invalid credentails");
     }
 
     const isPasswordValid = await user.validatePassword(password);
+
 
     if (isPasswordValid) {
       const token = await user.getJWT();
